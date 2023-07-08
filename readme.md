@@ -19,7 +19,7 @@ For a detailed synopsis and definitions, please refer to the `ProjectDescription
 
 ## Installation
 
-This application requires Python 3.6 and above. Create a new Conda environment using the provided `environment.yml` file:
+This application requires Python 3.9 and above. Create a new Conda environment using the provided `environment.yml` file:
 
 ```bash
 conda env create -f environment.yml
