@@ -1,0 +1,12 @@
+numpy >= 1.13.0
+scipy
+pandas
+folium
+scikit-learn
+matplotlib
+pytest
+pytest-timeout
+sphinx
+PyQt5
+PyQtWebEngine
+
