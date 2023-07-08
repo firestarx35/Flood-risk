@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>flood_tool &mdash; Flood Tool 1.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> Flood Tool
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">flood_tool</a></li>
+</ul>
+</div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Flood Tool</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active">flood_tool</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/modules.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="flood-tool">
+<h1>flood_tool<a class="headerlink" href="#flood-tool" title="Permalink to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="flood_tool.html">flood_tool package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="flood_tool.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="flood_tool.html#module-flood_tool.analysis">flood_tool.analysis module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="flood_tool.html#flood_tool.analysis.plot_risk_map"><code class="docutils literal notranslate"><span class="pre">plot_risk_map()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="flood_tool.html#module-flood_tool.geo">flood_tool.geo module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="flood_tool.html#flood_tool.geo.get_easting_northing_from_gps_lat_long"><code class="docutils literal notranslate"><span class="pre">get_easting_northing_from_gps_lat_long()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="flood_tool.html#flood_tool.geo.get_gps_lat_long_from_easting_northing"><code class="docutils literal notranslate"><span class="pre">get_gps_lat_long_from_easting_northing()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="flood_tool.html#module-flood_tool.live">flood_tool.live module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="flood_tool.html#flood_tool.live.get_station_data_from_csv"><code class="docutils literal notranslate"><span class="pre">get_station_data_from_csv()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="flood_tool.html#module-flood_tool.mapping">flood_tool.mapping module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="flood_tool.html#flood_tool.mapping.add_categorical_legend"><code class="docutils literal notranslate"><span class="pre">add_categorical_legend()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="flood_tool.html#flood_tool.mapping.api_data"><code class="docutils literal notranslate"><span class="pre">api_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="flood_tool.html#flood_tool.mapping.base_map"><code class="docutils literal notranslate"><span class="pre">base_map()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="flood_tool.html#flood_tool.mapping.convert_dtype"><code class="docutils literal notranslate"><span class="pre">convert_dtype()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="flood_tool.html#flood_tool.mapping.create_map"><code class="docutils literal notranslate"><span class="pre">create_map()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="flood_tool.html#flood_tool.mapping.create_markers"><code class="docutils literal notranslate"><span class="pre">create_markers()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="flood_tool.html#flood_tool.mapping.heatmap_gen"><code class="docutils literal notranslate"><span class="pre">heatmap_gen()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="flood_tool.html#flood_tool.mapping.layer_gen"><code class="docutils literal notranslate"><span class="pre">layer_gen()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="flood_tool.html#flood_tool.mapping.measurement_separator"><code class="docutils literal notranslate"><span class="pre">measurement_separator()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="flood_tool.html#flood_tool.mapping.plot_circle"><code class="docutils literal notranslate"><span class="pre">plot_circle()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="flood_tool.html#module-flood_tool.tool">flood_tool.tool module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="flood_tool.html#flood_tool.tool.Tool"><code class="docutils literal notranslate"><span class="pre">Tool</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="flood_tool.html#flood_tool.tool.Tool.back_to_classes"><code class="docutils literal notranslate"><span class="pre">Tool.back_to_classes()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="flood_tool.html#flood_tool.tool.Tool.get_annual_flood_risk"><code class="docutils literal notranslate"><span class="pre">Tool.get_annual_flood_risk()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="flood_tool.html#flood_tool.tool.Tool.get_annual_flood_risk_more"><code class="docutils literal notranslate"><span class="pre">Tool.get_annual_flood_risk_more()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="flood_tool.html#flood_tool.tool.Tool.get_easting_northing"><code class="docutils literal notranslate"><span class="pre">Tool.get_easting_northing()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="flood_tool.html#flood_tool.tool.Tool.get_flood_class_from_OSGB36_locations"><code class="docutils literal notranslate"><span class="pre">Tool.get_flood_class_from_OSGB36_locations()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="flood_tool.html#flood_tool.tool.Tool.get_flood_class_from_WGS84_locations"><code class="docutils literal notranslate"><span class="pre">Tool.get_flood_class_from_WGS84_locations()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="flood_tool.html#flood_tool.tool.Tool.get_flood_class_from_locations_methods"><code class="docutils literal notranslate"><span class="pre">Tool.get_flood_class_from_locations_methods()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="flood_tool.html#flood_tool.tool.Tool.get_flood_class_from_postcodes"><code class="docutils literal notranslate"><span class="pre">Tool.get_flood_class_from_postcodes()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="flood_tool.html#flood_tool.tool.Tool.get_flood_class_from_postcodes_methods"><code class="docutils literal notranslate"><span class="pre">Tool.get_flood_class_from_postcodes_methods()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="flood_tool.html#flood_tool.tool.Tool.get_house_price_methods"><code class="docutils literal notranslate"><span class="pre">Tool.get_house_price_methods()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="flood_tool.html#flood_tool.tool.Tool.get_lat_long"><code class="docutils literal notranslate"><span class="pre">Tool.get_lat_long()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="flood_tool.html#flood_tool.tool.Tool.get_local_authority_estimate"><code class="docutils literal notranslate"><span class="pre">Tool.get_local_authority_estimate()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="flood_tool.html#flood_tool.tool.Tool.get_local_authority_methods"><code class="docutils literal notranslate"><span class="pre">Tool.get_local_authority_methods()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="flood_tool.html#flood_tool.tool.Tool.get_median_house_price_estimate"><code class="docutils literal notranslate"><span class="pre">Tool.get_median_house_price_estimate()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="flood_tool.html#flood_tool.tool.Tool.get_total_value"><code class="docutils literal notranslate"><span class="pre">Tool.get_total_value()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="flood_tool.html#flood_tool.tool.Tool.local_encoder"><code class="docutils literal notranslate"><span class="pre">Tool.local_encoder()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="flood_tool.html#flood_tool.tool.Tool.train"><code class="docutils literal notranslate"><span class="pre">Tool.train()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="flood_tool.html#module-flood_tool">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Team Ouse.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>flood_tool.geo &mdash; Flood Tool 1.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> Flood Tool
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Flood Tool</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">flood_tool.geo</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for flood_tool.geo</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">array</span><span class="p">,</span> <span class="n">asarray</span><span class="p">,</span> <span class="n">mod</span><span class="p">,</span> <span class="n">sin</span><span class="p">,</span> <span class="n">cos</span><span class="p">,</span> <span class="n">tan</span><span class="p">,</span> <span class="n">sqrt</span><span class="p">,</span> <span class="n">arctan2</span><span class="p">,</span> <span class="n">floor</span><span class="p">,</span> <span class="n">rad2deg</span><span class="p">,</span> <span class="n">deg2rad</span><span class="p">,</span> <span class="n">stack</span>
+<span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="kn">import</span> <span class="n">inv</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;get_easting_northing_from_gps_lat_long&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;get_gps_lat_long_from_easting_northing&#39;</span><span class="p">]</span>
+
+<span class="k">class</span> <span class="nc">Ellipsoid</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Data structure for a global ellipsoid. &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">F_0</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">a</span> <span class="o">=</span> <span class="n">a</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">=</span> <span class="n">b</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span><span class="o">-</span><span class="n">b</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">a</span><span class="o">+</span><span class="n">b</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">e2</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span><span class="o">**</span><span class="mi">2</span><span class="o">-</span><span class="n">b</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">/</span><span class="n">a</span><span class="o">**</span><span class="mi">2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">F_0</span> <span class="o">=</span> <span class="n">F_0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">H</span><span class="o">=</span><span class="mi">0</span>
+
+<span class="k">class</span> <span class="nc">Datum</span><span class="p">(</span><span class="n">Ellipsoid</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Data structure for a global datum. &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">F_0</span><span class="p">,</span> <span class="n">phi_0</span><span class="p">,</span> <span class="n">lam_0</span><span class="p">,</span> <span class="n">E_0</span><span class="p">,</span> <span class="n">N_0</span><span class="p">,</span> <span class="n">H</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">F_0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">phi_0</span> <span class="o">=</span> <span class="n">phi_0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lam_0</span> <span class="o">=</span> <span class="n">lam_0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">E_0</span> <span class="o">=</span> <span class="n">E_0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">N_0</span> <span class="o">=</span> <span class="n">N_0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">H</span> <span class="o">=</span> <span class="n">H</span>
+
+<span class="k">def</span> <span class="nf">dms2rad</span><span class="p">(</span><span class="n">deg</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">sec</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert degrees, minutes, seconds to radians.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    deg: array_like</span>
+<span class="sd">        Angle in degrees.</span>
+<span class="sd">    min: array_like</span>
+<span class="sd">        (optional) Angle component in minutes.</span>
+<span class="sd">    sec: array_like</span>
+<span class="sd">        (optional) Angle component in seconds.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    numpy.ndarray</span>
+<span class="sd">        Angle in radians.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">deg</span> <span class="o">=</span> <span class="n">asarray</span><span class="p">(</span><span class="n">deg</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">deg2rad</span><span class="p">(</span><span class="n">deg</span><span class="o">+</span><span class="nb">min</span><span class="o">/</span><span class="mf">60.</span><span class="o">+</span><span class="n">sec</span><span class="o">/</span><span class="mf">3600.</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">rad2dms</span><span class="p">(</span><span class="n">rad</span><span class="p">,</span> <span class="n">dms</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert radians to degrees, minutes, seconds.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    rad: array_like</span>
+<span class="sd">        Angle in radians.</span>
+<span class="sd">    dms: bool</span>
+<span class="sd">        Use degrees, minutes, seconds format. If False, use decimal degrees.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    numpy.ndarray</span>
+<span class="sd">        Angle in degrees, minutes, seconds or decimal degrees.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">rad</span> <span class="o">=</span> <span class="n">asarray</span><span class="p">(</span><span class="n">rad</span><span class="p">)</span>
+    <span class="n">deg</span> <span class="o">=</span> <span class="n">rad2deg</span><span class="p">(</span><span class="n">rad</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">dms</span><span class="p">:</span>
+        <span class="nb">min</span> <span class="o">=</span> <span class="mf">60.0</span><span class="o">*</span><span class="n">mod</span><span class="p">(</span><span class="n">deg</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+        <span class="n">sec</span> <span class="o">=</span> <span class="mf">60.0</span><span class="o">*</span><span class="n">mod</span><span class="p">(</span><span class="nb">min</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">stack</span><span class="p">((</span><span class="n">floor</span><span class="p">(</span><span class="n">deg</span><span class="p">),</span> <span class="n">floor</span><span class="p">(</span><span class="nb">min</span><span class="p">),</span> <span class="n">sec</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">4</span><span class="p">)))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">deg</span>
+
+<span class="n">osgb36</span> <span class="o">=</span> <span class="n">Datum</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="mf">6377563.396</span><span class="p">,</span>
+               <span class="n">b</span><span class="o">=</span><span class="mf">6356256.910</span><span class="p">,</span>
+               <span class="n">F_0</span><span class="o">=</span><span class="mf">0.9996012717</span><span class="p">,</span>
+               <span class="n">phi_0</span><span class="o">=</span><span class="n">deg2rad</span><span class="p">(</span><span class="mf">49.0</span><span class="p">),</span>
+               <span class="n">lam_0</span><span class="o">=</span><span class="n">deg2rad</span><span class="p">(</span><span class="o">-</span><span class="mf">2.</span><span class="p">),</span>
+               <span class="n">E_0</span><span class="o">=</span><span class="mi">400000</span><span class="p">,</span>
+               <span class="n">N_0</span><span class="o">=-</span><span class="mi">100000</span><span class="p">,</span>
+               <span class="n">H</span><span class="o">=</span><span class="mf">24.7</span><span class="p">)</span>
+
+<span class="n">wgs84</span> <span class="o">=</span> <span class="n">Ellipsoid</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="mi">6378137</span><span class="p">,</span> 
+                  <span class="n">b</span><span class="o">=</span><span class="mf">6356752.3142</span><span class="p">,</span>
+                  <span class="n">F_0</span><span class="o">=</span><span class="mf">0.9996</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">lat_long_to_xyz</span><span class="p">(</span><span class="n">phi</span><span class="p">,</span> <span class="n">lam</span><span class="p">,</span> <span class="n">rads</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">datum</span><span class="o">=</span><span class="n">osgb36</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert input latitude/longitude in a given datum into</span>
+<span class="sd">    Cartesian (x, y, z) coordinates.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    phi: array_like</span>
+<span class="sd">        Latitude in degrees (if radians=False) or radians (if radians=True).</span>
+<span class="sd">    lam: array_like</span>
+<span class="sd">        Longitude in degrees (if radians=False) or radians (if radians=True).</span>
+<span class="sd">    rads: bool (optional)</span>
+<span class="sd">        If True, input latitudes and longitudes are in radians.</span>
+<span class="sd">    datum: Datum (optional)</span>
+<span class="sd">        Datum to use for conversion.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">rads</span><span class="p">:</span>
+        <span class="n">phi</span> <span class="o">=</span> <span class="n">deg2rad</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span>
+        <span class="n">lam</span> <span class="o">=</span> <span class="n">deg2rad</span><span class="p">(</span><span class="n">lam</span><span class="p">)</span>
+
+    <span class="n">nu</span> <span class="o">=</span> <span class="n">datum</span><span class="o">.</span><span class="n">a</span><span class="o">*</span><span class="n">datum</span><span class="o">.</span><span class="n">F_0</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">datum</span><span class="o">.</span><span class="n">e2</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+  
+    <span class="k">return</span> <span class="n">array</span><span class="p">(((</span><span class="n">nu</span><span class="o">+</span><span class="n">datum</span><span class="o">.</span><span class="n">H</span><span class="p">)</span><span class="o">*</span><span class="n">cos</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span><span class="o">*</span><span class="n">cos</span><span class="p">(</span><span class="n">lam</span><span class="p">),</span>
+                  <span class="p">(</span><span class="n">nu</span><span class="o">+</span><span class="n">datum</span><span class="o">.</span><span class="n">H</span><span class="p">)</span><span class="o">*</span><span class="n">cos</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">lam</span><span class="p">),</span>
+                  <span class="p">((</span><span class="mi">1</span><span class="o">-</span><span class="n">datum</span><span class="o">.</span><span class="n">e2</span><span class="p">)</span><span class="o">*</span><span class="n">nu</span><span class="o">+</span><span class="n">datum</span><span class="o">.</span><span class="n">H</span><span class="p">)</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">phi</span><span class="p">)))</span>
+
+<span class="k">def</span> <span class="nf">xyz_to_lat_long</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span><span class="p">,</span> <span class="n">rads</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">datum</span><span class="o">=</span><span class="n">osgb36</span><span class="p">):</span>
+
+    <span class="n">p</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="n">y</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="n">lam</span> <span class="o">=</span> <span class="n">arctan2</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+    <span class="n">phi</span> <span class="o">=</span> <span class="n">arctan2</span><span class="p">(</span><span class="n">z</span><span class="p">,</span><span class="n">p</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">datum</span><span class="o">.</span><span class="n">e2</span><span class="p">))</span>
+
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+
+        <span class="n">nu</span> <span class="o">=</span> <span class="n">datum</span><span class="o">.</span><span class="n">a</span><span class="o">*</span><span class="n">datum</span><span class="o">.</span><span class="n">F_0</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">datum</span><span class="o">.</span><span class="n">e2</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">dnu</span> <span class="o">=</span> <span class="o">-</span><span class="n">datum</span><span class="o">.</span><span class="n">a</span><span class="o">*</span><span class="n">datum</span><span class="o">.</span><span class="n">F_0</span><span class="o">*</span><span class="n">cos</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">datum</span><span class="o">.</span><span class="n">e2</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="mf">1.5</span>
+
+        <span class="n">f0</span> <span class="o">=</span> <span class="p">(</span><span class="n">z</span> <span class="o">+</span> <span class="n">datum</span><span class="o">.</span><span class="n">e2</span><span class="o">*</span><span class="n">nu</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">phi</span><span class="p">))</span><span class="o">/</span><span class="n">p</span> <span class="o">-</span> <span class="n">tan</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span>
+        <span class="n">f1</span> <span class="o">=</span> <span class="n">datum</span><span class="o">.</span><span class="n">e2</span><span class="o">*</span><span class="p">(</span><span class="n">nu</span><span class="o">**</span><span class="n">cos</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span><span class="o">+</span><span class="n">dnu</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">phi</span><span class="p">))</span><span class="o">/</span><span class="n">p</span> <span class="o">-</span> <span class="mf">1.0</span><span class="o">/</span><span class="n">cos</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">phi</span> <span class="o">-=</span> <span class="n">f0</span><span class="o">/</span><span class="n">f1</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">rads</span><span class="p">:</span>
+        <span class="n">phi</span> <span class="o">=</span> <span class="n">rad2dms</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span>
+        <span class="n">lam</span> <span class="o">=</span> <span class="n">rad2dms</span><span class="p">(</span><span class="n">lam</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">phi</span><span class="p">,</span> <span class="n">lam</span>
+
+<div class="viewcode-block" id="get_easting_northing_from_gps_lat_long"><a class="viewcode-back" href="../../index.html#flood_tool.geo.get_easting_northing_from_gps_lat_long">[docs]</a><span class="k">def</span> <span class="nf">get_easting_northing_from_gps_lat_long</span><span class="p">(</span><span class="n">phi</span><span class="p">,</span> <span class="n">lam</span><span class="p">,</span> <span class="n">rads</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Get OSGB36 easting/northing from GPS latitude and longitude pairs.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    phi: float/arraylike</span>
+<span class="sd">        GPS (i.e. WGS84 datum) latitude value(s)</span>
+<span class="sd">    lam: float/arrayling</span>
+<span class="sd">        GPS (i.e. WGS84 datum) longitude value(s).</span>
+<span class="sd">    rads: bool (optional)</span>
+<span class="sd">        If true, specifies input is is radians.</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    numpy.ndarray</span>
+<span class="sd">        Easting values (in m)</span>
+<span class="sd">    numpy.ndarray</span>
+<span class="sd">        Northing values (in m)</span>
+<span class="sd">        Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; get_easting_northing_from_gps_lat_long([55.5], [-1.54])</span>
+<span class="sd">    (array([429157.0]), array([623009]))</span>
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Based on the formulas in &quot;A guide to coordinate systems in Great Britain&quot;.</span>
+<span class="sd">    See also https://webapps.bgs.ac.uk/data/webservices/convertForm.cfm</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># question: how to check if it is osgb36 or wgs84? can we add an input?</span>
+    <span class="n">phi</span><span class="p">,</span><span class="n">lam</span> <span class="o">=</span> <span class="n">WGS84toOSGB36</span><span class="p">(</span><span class="n">phi</span><span class="p">,</span> <span class="n">lam</span><span class="p">,</span> <span class="n">rads</span><span class="p">)</span> <span class="c1"># assuption: must keep input as wgs84 data for phi and lam</span>
+    <span class="k">if</span> <span class="n">rads</span> <span class="o">!=</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="c1"># print(&#39;degree input&#39;)</span>
+        <span class="n">phi</span><span class="p">,</span><span class="n">lam</span> <span class="o">=</span> <span class="n">dms2rad</span><span class="p">(</span><span class="n">phi</span><span class="p">),</span><span class="n">dms2rad</span><span class="p">(</span><span class="n">lam</span><span class="p">)</span> <span class="c1"># change to radians due to cos sin tan function requirements</span>
+    
+    <span class="n">F_0</span> <span class="o">=</span> <span class="n">osgb36</span><span class="o">.</span><span class="n">F_0</span>
+    <span class="n">e2</span> <span class="o">=</span> <span class="n">osgb36</span><span class="o">.</span><span class="n">e2</span>
+    <span class="n">phi_0</span> <span class="o">=</span> <span class="n">osgb36</span><span class="o">.</span><span class="n">phi_0</span>
+    <span class="n">lam_0</span> <span class="o">=</span> <span class="n">osgb36</span><span class="o">.</span><span class="n">lam_0</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">osgb36</span><span class="o">.</span><span class="n">n</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="n">osgb36</span><span class="o">.</span><span class="n">a</span><span class="o">*</span><span class="n">F_0</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">e2</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="p">)</span>
+    <span class="n">rho</span> <span class="o">=</span> <span class="n">osgb36</span><span class="o">.</span><span class="n">a</span><span class="o">*</span><span class="n">F_0</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">e2</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">e2</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="mf">1.5</span><span class="p">)</span>
+    <span class="n">obs2</span>  <span class="o">=</span> <span class="n">v</span><span class="o">/</span><span class="n">rho</span> <span class="o">-</span><span class="mi">1</span> <span class="c1"># the symol looks like a n  with a tail</span>
+    
+    <span class="n">M</span> <span class="o">=</span> <span class="n">func_M</span><span class="p">(</span><span class="n">F_0</span><span class="p">,</span><span class="n">n</span><span class="p">,</span><span class="n">phi</span><span class="p">,</span><span class="n">phi_0</span><span class="p">)</span>
+    <span class="n">I</span> <span class="o">=</span> <span class="n">M</span><span class="o">+</span><span class="n">osgb36</span><span class="o">.</span><span class="n">N_0</span>
+    <span class="n">II</span> <span class="o">=</span> <span class="n">v</span><span class="o">/</span><span class="mi">2</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span><span class="o">*</span><span class="n">cos</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span>
+    <span class="n">III</span> <span class="o">=</span> <span class="n">v</span><span class="o">/</span><span class="mi">24</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span><span class="o">*</span><span class="n">cos</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span><span class="o">**</span><span class="mi">3</span><span class="o">*</span><span class="p">(</span><span class="mi">5</span><span class="o">-</span><span class="n">tan</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="mi">9</span><span class="o">*</span><span class="n">obs2</span><span class="p">)</span>
+    <span class="n">IIIA</span> <span class="o">=</span> <span class="n">v</span><span class="o">/</span><span class="mi">720</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span><span class="o">*</span><span class="n">cos</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span><span class="o">**</span><span class="mi">5</span><span class="o">*</span><span class="p">(</span><span class="mi">61</span><span class="o">-</span><span class="mi">58</span><span class="o">*</span><span class="n">tan</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="n">tan</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span><span class="o">**</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">IV</span> <span class="o">=</span> <span class="n">v</span><span class="o">*</span><span class="n">cos</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span>
+    <span class="n">V</span> <span class="o">=</span> <span class="n">v</span><span class="o">/</span><span class="mi">6</span><span class="o">*</span><span class="n">cos</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span><span class="o">**</span><span class="mi">3</span><span class="o">*</span><span class="p">(</span><span class="n">v</span><span class="o">/</span><span class="n">rho</span><span class="o">-</span><span class="n">tan</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">VI</span> <span class="o">=</span> <span class="n">v</span><span class="o">/</span><span class="mi">120</span><span class="o">*</span><span class="n">cos</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span><span class="o">**</span><span class="mi">5</span><span class="o">*</span><span class="p">(</span><span class="mi">5</span><span class="o">-</span><span class="mi">18</span><span class="o">*</span><span class="n">tan</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="n">tan</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span><span class="o">**</span><span class="mi">4</span><span class="o">+</span><span class="mi">14</span><span class="o">*</span><span class="n">obs2</span><span class="o">-</span><span class="mi">58</span><span class="o">*</span><span class="p">(</span><span class="n">tan</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">obs2</span><span class="p">)</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="n">I</span><span class="o">+</span><span class="n">II</span><span class="o">*</span><span class="p">(</span><span class="n">lam</span><span class="o">-</span><span class="n">lam_0</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="n">III</span><span class="o">*</span><span class="p">(</span><span class="n">lam</span><span class="o">-</span><span class="n">lam_0</span><span class="p">)</span><span class="o">**</span><span class="mi">4</span><span class="o">+</span><span class="n">IIIA</span><span class="o">*</span><span class="p">(</span><span class="n">lam</span><span class="o">-</span><span class="n">lam_0</span><span class="p">)</span><span class="o">**</span><span class="mi">6</span>
+    <span class="n">E</span> <span class="o">=</span> <span class="n">osgb36</span><span class="o">.</span><span class="n">E_0</span><span class="o">+</span><span class="n">IV</span><span class="o">*</span><span class="p">(</span><span class="n">lam</span><span class="o">-</span><span class="n">lam_0</span><span class="p">)</span><span class="o">+</span><span class="n">V</span><span class="o">*</span><span class="p">(</span><span class="n">lam</span><span class="o">-</span><span class="n">lam_0</span><span class="p">)</span><span class="o">**</span><span class="mi">3</span><span class="o">+</span><span class="n">VI</span><span class="o">*</span><span class="p">(</span><span class="n">lam</span><span class="o">-</span><span class="n">lam_0</span><span class="p">)</span><span class="o">**</span><span class="mi">5</span>
+    <span class="k">return</span> <span class="n">E</span><span class="p">,</span><span class="n">N</span> <span class="c1"># might need to round decimals</span></div>
+
+<div class="viewcode-block" id="get_gps_lat_long_from_easting_northing"><a class="viewcode-back" href="../../index.html#flood_tool.geo.get_gps_lat_long_from_easting_northing">[docs]</a><span class="k">def</span> <span class="nf">get_gps_lat_long_from_easting_northing</span><span class="p">(</span><span class="n">east</span><span class="p">,</span> <span class="n">north</span><span class="p">,</span> <span class="n">rads</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">dms</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Get OSGB36 easting/northing from GPS latitude and</span>
+<span class="sd">    longitude pairs.</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    east: float/arraylike</span>
+<span class="sd">        OSGB36 easting value(s) (in m).</span>
+<span class="sd">    north: float/arrayling</span>
+<span class="sd">        OSGB36 easting value(s) (in m).</span>
+<span class="sd">    rads: bool (optional)</span>
+<span class="sd">        If true, specifies ouput is is radians.</span>
+<span class="sd">    dms: bool (optional)</span>
+<span class="sd">        If true, output is in degrees/minutes/seconds. Incompatible</span>
+<span class="sd">        with rads option.</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    numpy.ndarray</span>
+<span class="sd">        GPS (i.e. WGS84 datum) latitude value(s).</span>
+<span class="sd">    numpy.ndarray</span>
+<span class="sd">        GPS (i.e. WGS84 datum) longitude value(s).</span>
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; get_gps_lat_long_from_easting_northing([429157], [623009])</span>
+<span class="sd">    (array([55.5]), array([-1.540008]))</span>
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Based on the formulas in &quot;A guide to coordinate systems in Great Britain&quot;.</span>
+<span class="sd">    See also https://webapps.bgs.ac.uk/data/webservices/convertForm.cfm</span>
+<span class="sd">    &quot;&quot;&quot;</span>    
+    <span class="k">assert</span> <span class="nb">type</span><span class="p">(</span><span class="n">east</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">int</span> <span class="ow">and</span> <span class="nb">type</span><span class="p">(</span><span class="n">north</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">int</span><span class="p">,</span> <span class="s1">&#39;please input float or array like data&#39;</span>
+    <span class="k">assert</span> <span class="n">rads</span> <span class="o">==</span> <span class="kc">False</span> <span class="ow">or</span> <span class="n">dms</span> <span class="o">==</span> <span class="kc">False</span> <span class="p">,</span> <span class="s1">&#39;rads are incompatible with dms option, choose only one of them to be true&#39;</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">east</span><span class="p">)</span> <span class="o">==</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="n">east</span> <span class="o">=</span> <span class="p">[</span><span class="n">east</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">north</span><span class="p">)</span> <span class="o">==</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="n">north</span> <span class="o">=</span> <span class="p">[</span><span class="n">north</span><span class="p">]</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">east</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">north</span><span class="p">),</span> <span class="s1">&#39;east and north input has different size&#39;</span>
+    <span class="n">phi_0</span><span class="p">,</span><span class="n">lam_0</span> <span class="o">=</span> <span class="n">osgb36</span><span class="o">.</span><span class="n">phi_0</span><span class="p">,</span><span class="n">osgb36</span><span class="o">.</span><span class="n">lam_0</span> <span class="c1"># assumption: pass in as osgb </span>
+    <span class="n">N</span><span class="p">,</span><span class="n">E</span> <span class="o">=</span> <span class="n">north</span><span class="p">,</span><span class="n">east</span>
+    <span class="n">N_0</span><span class="p">,</span><span class="n">E_0</span><span class="p">,</span><span class="n">F_0</span><span class="p">,</span><span class="n">a</span><span class="p">,</span><span class="n">n</span><span class="p">,</span><span class="n">e2</span> <span class="o">=</span> <span class="n">array</span><span class="p">([</span><span class="n">osgb36</span><span class="o">.</span><span class="n">N_0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">N</span><span class="p">))]),</span><span class="n">array</span><span class="p">([</span><span class="n">osgb36</span><span class="o">.</span><span class="n">E_0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">E</span><span class="p">))]),</span><span class="n">osgb36</span><span class="o">.</span><span class="n">F_0</span><span class="p">,</span><span class="n">osgb36</span><span class="o">.</span><span class="n">a</span><span class="p">,</span><span class="n">osgb36</span><span class="o">.</span><span class="n">n</span><span class="p">,</span><span class="n">osgb36</span><span class="o">.</span><span class="n">e2</span>
+    <span class="n">phi</span> <span class="o">=</span> <span class="p">(</span><span class="n">N</span><span class="o">-</span><span class="n">N_0</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">a</span><span class="o">*</span><span class="n">F_0</span><span class="p">)</span><span class="o">+</span><span class="n">phi_0</span>
+    <span class="n">M</span> <span class="o">=</span> <span class="n">func_M</span><span class="p">(</span><span class="n">F_0</span><span class="p">,</span><span class="n">n</span><span class="p">,</span><span class="n">phi</span><span class="p">,</span><span class="n">phi_0</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">phi</span><span class="p">)):</span>
+        <span class="k">while</span> <span class="nb">abs</span><span class="p">(</span><span class="n">N</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-</span><span class="n">N_0</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-</span><span class="n">M</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">&gt;=</span> <span class="mf">0.00001</span><span class="p">:</span>
+            <span class="n">phi</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">N</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-</span><span class="n">N_0</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-</span><span class="n">M</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">/</span><span class="p">(</span><span class="n">a</span><span class="o">*</span><span class="n">F_0</span><span class="p">)</span><span class="o">+</span><span class="n">phi</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">M</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">func_M</span><span class="p">(</span><span class="n">F_0</span><span class="p">,</span><span class="n">n</span><span class="p">,</span><span class="n">phi</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="n">phi_0</span><span class="p">)</span>
+    <span class="n">rho</span> <span class="o">=</span> <span class="n">osgb36</span><span class="o">.</span><span class="n">a</span><span class="o">*</span><span class="n">F_0</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">e2</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">e2</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="mf">1.5</span><span class="p">)</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="n">osgb36</span><span class="o">.</span><span class="n">a</span><span class="o">*</span><span class="n">F_0</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">e2</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="p">)</span>
+    <span class="n">obs2</span>  <span class="o">=</span> <span class="n">v</span><span class="o">/</span><span class="n">rho</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="n">VII</span> <span class="o">=</span> <span class="n">tan</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">rho</span><span class="o">*</span><span class="n">v</span><span class="p">)</span>
+    <span class="n">VIII</span> <span class="o">=</span> <span class="n">tan</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">24</span><span class="o">*</span><span class="n">rho</span><span class="o">*</span><span class="n">v</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mi">5</span><span class="o">+</span><span class="mi">3</span><span class="o">*</span><span class="n">tan</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="n">obs2</span><span class="o">-</span><span class="mi">9</span><span class="o">*</span><span class="n">tan</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">obs2</span><span class="p">)</span>
+    <span class="n">IX</span> <span class="o">=</span> <span class="n">tan</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">720</span><span class="o">*</span><span class="n">rho</span><span class="o">*</span><span class="n">v</span><span class="o">**</span><span class="mi">5</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mi">61</span><span class="o">+</span><span class="mi">90</span><span class="o">*</span><span class="n">tan</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="mi">45</span><span class="o">*</span><span class="n">tan</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span><span class="o">**</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="n">cos</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span><span class="o">*</span><span class="n">v</span><span class="p">)</span>
+    <span class="n">XI</span> <span class="o">=</span> <span class="p">(</span><span class="n">v</span><span class="o">/</span><span class="n">rho</span><span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="n">tan</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">6</span><span class="o">*</span><span class="n">v</span><span class="o">**</span><span class="mi">3</span><span class="o">*</span><span class="n">cos</span><span class="p">(</span><span class="n">phi</span><span class="p">))</span>
+    <span class="n">XII</span> <span class="o">=</span> <span class="p">(</span><span class="mi">5</span><span class="o">+</span><span class="mi">28</span><span class="o">*</span><span class="n">tan</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="mi">24</span><span class="o">*</span><span class="n">tan</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span><span class="o">**</span><span class="mi">4</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">120</span><span class="o">*</span><span class="n">v</span><span class="o">**</span><span class="mi">5</span><span class="o">*</span><span class="n">cos</span><span class="p">(</span><span class="n">phi</span><span class="p">))</span>
+    <span class="n">XIIA</span> <span class="o">=</span> <span class="p">(</span><span class="mi">61</span><span class="o">+</span><span class="mi">662</span><span class="o">*</span><span class="n">tan</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="mi">1320</span><span class="o">*</span><span class="n">tan</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span><span class="o">**</span><span class="mi">4</span><span class="o">+</span><span class="mi">720</span><span class="o">*</span><span class="n">tan</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span><span class="o">**</span><span class="mi">6</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">5040</span><span class="o">*</span><span class="n">v</span><span class="o">**</span><span class="mi">7</span><span class="o">*</span><span class="n">cos</span><span class="p">(</span><span class="n">phi</span><span class="p">))</span>    
+    <span class="n">phi</span> <span class="o">=</span> <span class="n">phi</span><span class="o">-</span><span class="n">VII</span><span class="o">*</span><span class="p">(</span><span class="n">E</span><span class="o">-</span><span class="n">E_0</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="n">VIII</span><span class="o">*</span><span class="p">(</span><span class="n">E</span><span class="o">-</span><span class="n">E_0</span><span class="p">)</span><span class="o">**</span><span class="mi">4</span><span class="o">-</span><span class="n">IX</span><span class="o">*</span><span class="p">(</span><span class="n">E</span><span class="o">-</span><span class="n">E_0</span><span class="p">)</span><span class="o">**</span><span class="mi">6</span>
+    <span class="n">lam</span> <span class="o">=</span> <span class="n">lam_0</span><span class="o">+</span><span class="n">X</span><span class="o">*</span><span class="p">(</span><span class="n">E</span><span class="o">-</span><span class="n">E_0</span><span class="p">)</span><span class="o">-</span><span class="n">XI</span><span class="o">*</span><span class="p">(</span><span class="n">E</span><span class="o">-</span><span class="n">E_0</span><span class="p">)</span><span class="o">**</span><span class="mi">3</span><span class="o">+</span><span class="n">XII</span><span class="o">*</span><span class="p">(</span><span class="n">E</span><span class="o">-</span><span class="n">E_0</span><span class="p">)</span><span class="o">**</span><span class="mi">5</span><span class="o">-</span><span class="n">XIIA</span><span class="o">*</span><span class="p">(</span><span class="n">E</span><span class="o">-</span><span class="n">E_0</span><span class="p">)</span><span class="o">**</span><span class="mi">7</span>
+    <span class="n">phi</span><span class="p">,</span><span class="n">lam</span> <span class="o">=</span> <span class="n">OSGB36toWGS84</span><span class="p">(</span><span class="n">phi</span><span class="p">,</span><span class="n">lam</span><span class="p">,</span><span class="n">rads</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">rads</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">phi</span><span class="p">,</span> <span class="n">lam</span>
+    <span class="k">else</span><span class="p">:</span> <span class="c1"># assumption: based on given example, if rads and dms both = False, automatically gives dms value</span>
+        <span class="k">return</span> <span class="n">rad2dms</span><span class="p">(</span><span class="n">phi</span><span class="p">),</span><span class="n">rad2dms</span><span class="p">(</span><span class="n">lam</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">func_M</span><span class="p">(</span><span class="n">F_0</span><span class="p">,</span><span class="n">n</span><span class="p">,</span><span class="n">phi</span><span class="p">,</span><span class="n">phi_0</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;The functio to calculate M that is inside easting/north to latitude/longitude convertion calculation&#39;&#39;&#39;</span>
+    <span class="n">M</span> <span class="o">=</span> <span class="n">osgb36</span><span class="o">.</span><span class="n">b</span><span class="o">*</span><span class="n">F_0</span><span class="o">*</span> \
+        <span class="p">((</span><span class="mi">1</span><span class="o">+</span><span class="n">n</span><span class="o">+</span><span class="mi">5</span><span class="o">/</span><span class="mi">4</span><span class="o">*</span><span class="n">n</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="mi">5</span><span class="o">/</span><span class="mi">4</span><span class="o">*</span><span class="n">n</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">phi</span><span class="o">-</span><span class="n">phi_0</span><span class="p">)</span>
+        <span class="o">-</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">n</span><span class="o">+</span><span class="mi">3</span><span class="o">*</span><span class="n">n</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="mi">21</span><span class="o">/</span><span class="mi">8</span><span class="o">*</span><span class="n">n</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">phi</span><span class="o">-</span><span class="n">phi_0</span><span class="p">)</span><span class="o">*</span><span class="n">cos</span><span class="p">(</span><span class="n">phi</span><span class="o">+</span><span class="n">phi_0</span><span class="p">)</span>
+        <span class="o">+</span><span class="p">(</span><span class="mi">15</span><span class="o">/</span><span class="mi">8</span><span class="o">*</span><span class="n">n</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="mi">15</span><span class="o">/</span><span class="mi">8</span><span class="o">*</span><span class="n">n</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">phi</span><span class="o">-</span><span class="n">phi_0</span><span class="p">))</span><span class="o">*</span><span class="n">cos</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">phi</span><span class="o">+</span><span class="n">phi_0</span><span class="p">))</span>
+        <span class="o">-</span><span class="mi">35</span><span class="o">/</span><span class="mi">24</span><span class="o">*</span><span class="n">n</span><span class="o">**</span><span class="mi">3</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="p">(</span><span class="n">phi</span><span class="o">-</span><span class="n">phi_0</span><span class="p">))</span><span class="o">*</span><span class="n">cos</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="p">(</span><span class="n">phi</span><span class="o">+</span><span class="n">phi_0</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="n">M</span>
+
+<span class="k">class</span> <span class="nc">HelmertTransform</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Callable class to perform a Helmert transform.&quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">rx</span><span class="p">,</span> <span class="n">ry</span><span class="p">,</span> <span class="n">rz</span><span class="p">,</span> <span class="n">T</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">T</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">M</span> <span class="o">=</span> <span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="o">+</span><span class="n">s</span><span class="p">,</span> <span class="o">-</span><span class="n">rz</span><span class="p">,</span> <span class="n">ry</span><span class="p">],</span>
+                        <span class="p">[</span><span class="n">rz</span><span class="p">,</span> <span class="mi">1</span><span class="o">+</span><span class="n">s</span><span class="p">,</span> <span class="o">-</span><span class="n">rx</span><span class="p">],</span>
+                        <span class="p">[</span><span class="o">-</span><span class="n">ry</span><span class="p">,</span> <span class="n">rx</span><span class="p">,</span> <span class="mi">1</span><span class="o">+</span><span class="n">s</span><span class="p">]])</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">T</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">M</span><span class="nd">@X</span>
+
+<span class="k">class</span> <span class="nc">HelmertInverseTransform</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Callable class to perform the inverse of a Helmert transform.&quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">rx</span><span class="p">,</span> <span class="n">ry</span><span class="p">,</span> <span class="n">rz</span><span class="p">,</span> <span class="n">T</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">T</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">M</span> <span class="o">=</span> <span class="n">inv</span><span class="p">(</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="o">+</span><span class="n">s</span><span class="p">,</span> <span class="o">-</span><span class="n">rz</span><span class="p">,</span> <span class="n">ry</span><span class="p">],</span>
+                        <span class="p">[</span><span class="n">rz</span><span class="p">,</span> <span class="mi">1</span><span class="o">+</span><span class="n">s</span><span class="p">,</span> <span class="o">-</span><span class="n">rx</span><span class="p">],</span>
+                        <span class="p">[</span><span class="o">-</span><span class="n">ry</span><span class="p">,</span> <span class="n">rx</span><span class="p">,</span> <span class="mi">1</span><span class="o">+</span><span class="n">s</span><span class="p">]]))</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">M</span><span class="o">@</span><span class="p">(</span><span class="n">X</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+
+<span class="n">OSGB36transform</span> <span class="o">=</span> <span class="n">HelmertTransform</span><span class="p">(</span><span class="mf">20.4894e-6</span><span class="p">,</span>
+                             <span class="o">-</span><span class="n">dms2rad</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">0.1502</span><span class="p">),</span>
+                             <span class="o">-</span><span class="n">dms2rad</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">0.2470</span><span class="p">),</span>
+                             <span class="o">-</span><span class="n">dms2rad</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">0.8421</span><span class="p">),</span>
+                             <span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mf">446.448</span><span class="p">,</span> <span class="mf">125.157</span><span class="p">,</span> <span class="o">-</span><span class="mf">542.060</span><span class="p">]))</span>
+
+<span class="n">WGS84transform</span> <span class="o">=</span> <span class="n">HelmertInverseTransform</span><span class="p">(</span><span class="mf">20.4894e-6</span><span class="p">,</span>
+                             <span class="o">-</span><span class="n">dms2rad</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">0.1502</span><span class="p">),</span>
+                             <span class="o">-</span><span class="n">dms2rad</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">0.2470</span><span class="p">),</span>
+                             <span class="o">-</span><span class="n">dms2rad</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">0.8421</span><span class="p">),</span>
+                             <span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mf">446.448</span><span class="p">,</span> <span class="mf">125.157</span><span class="p">,</span> <span class="o">-</span><span class="mf">542.060</span><span class="p">]))</span>
+
+
+<span class="k">def</span> <span class="nf">WGS84toOSGB36</span><span class="p">(</span><span class="n">phi</span><span class="p">,</span> <span class="n">lam</span><span class="p">,</span> <span class="n">rads</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert WGS84 latitude/longitude to OSGB36 latitude/longitude.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    phi : array_like or float</span>
+<span class="sd">        Latitude in degrees or radians on WGS84 datum.</span>
+<span class="sd">    lam : array_like or float</span>
+<span class="sd">        Longitude in degrees or radians on WGS84 datum.</span>
+<span class="sd">    rads : bool, optional</span>
+<span class="sd">        If True, phi and lam are in radians. If False, phi and lam are in degrees.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple of numpy.ndarrays</span>
+<span class="sd">        Latitude and longitude on OSGB36 datum in degrees or radians.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">xyz</span> <span class="o">=</span> <span class="n">OSGB36transform</span><span class="p">(</span><span class="n">lat_long_to_xyz</span><span class="p">(</span><span class="n">asarray</span><span class="p">(</span><span class="n">phi</span><span class="p">),</span> <span class="n">asarray</span><span class="p">(</span><span class="n">lam</span><span class="p">),</span>
+                                  <span class="n">rads</span><span class="o">=</span><span class="n">rads</span><span class="p">,</span> <span class="n">datum</span><span class="o">=</span><span class="n">wgs84</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">xyz_to_lat_long</span><span class="p">(</span><span class="o">*</span><span class="n">xyz</span><span class="p">,</span> <span class="n">rads</span><span class="o">=</span><span class="n">rads</span><span class="p">,</span> <span class="n">datum</span><span class="o">=</span><span class="n">osgb36</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">OSGB36toWGS84</span><span class="p">(</span><span class="n">phi</span><span class="p">,</span> <span class="n">lam</span><span class="p">,</span> <span class="n">rads</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert OSGB36 latitude/longitude to WGS84 latitude/longitude.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    phi : array_like or float</span>
+<span class="sd">        Latitude in degrees or radians on OSGB36 datum.</span>
+<span class="sd">    lam : array_like or float</span>
+<span class="sd">        Longitude in degrees or radians on OSGB36 datum.</span>
+<span class="sd">    rads : bool, optional</span>
+<span class="sd">        If True, phi and lam are in radians. If False, phi and lam are in degrees.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple of numpy.ndarrays</span>
+<span class="sd">        Latitude and longitude on WGS84 datum in degrees or radians.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">xyz</span> <span class="o">=</span> <span class="n">WGS84transform</span><span class="p">(</span><span class="n">lat_long_to_xyz</span><span class="p">(</span><span class="n">asarray</span><span class="p">(</span><span class="n">phi</span><span class="p">),</span> <span class="n">asarray</span><span class="p">(</span><span class="n">lam</span><span class="p">),</span>
+                                  <span class="n">rads</span><span class="o">=</span><span class="n">rads</span><span class="p">,</span> <span class="n">datum</span><span class="o">=</span><span class="n">osgb36</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">xyz_to_lat_long</span><span class="p">(</span><span class="o">*</span><span class="n">xyz</span><span class="p">,</span> <span class="n">rads</span><span class="o">=</span><span class="n">rads</span><span class="p">,</span> <span class="n">datum</span><span class="o">=</span><span class="n">wgs84</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Team Ouse.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

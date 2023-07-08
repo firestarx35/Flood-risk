@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>flood_tool.tool &mdash; Flood Tool 1.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> Flood Tool
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Flood Tool</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">flood_tool.tool</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for flood_tool.tool</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Example module in template package.&quot;&quot;&quot;</span>
+
+
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="kn">from</span> <span class="nn">sklearn.preprocessing</span> <span class="kn">import</span> <span class="n">LabelEncoder</span>
+<span class="kn">from</span> <span class="nn">sklearn.neighbors</span> <span class="kn">import</span> <span class="n">KNeighborsClassifier</span>
+<span class="kn">from</span> <span class="nn">sklearn.tree</span> <span class="kn">import</span> <span class="n">DecisionTreeClassifier</span>
+<span class="kn">from</span> <span class="nn">sklearn.ensemble</span> <span class="kn">import</span> <span class="n">RandomForestClassifier</span>
+
+<span class="kn">from</span> <span class="nn">.geo</span> <span class="kn">import</span> <span class="o">*</span>
+
+
+<span class="c1"># __all__ = [&#39;Tool&#39;]</span>
+
+<span class="c1"># class Tool_local(object):</span>
+<span class="c1">#     &quot;&quot;&quot;Class to interact with a postcode database file.&quot;&quot;&quot;</span>
+
+<span class="c1">#     def __init__(self, postcode_file=&#39;&#39;, sample_labels=&#39;&#39;):</span>
+
+<span class="c1">#         &quot;&quot;&quot;</span>
+<span class="c1">#         Parameters</span>
+<span class="c1">#         ----------</span>
+
+<span class="c1">#         full_postcode_file : str, optional</span>
+<span class="c1">#             Filename of a .csv file containing geographic location</span>
+<span class="c1">#             data for postcodes.</span>
+
+<span class="c1">#         household_file : str, optional</span>
+<span class="c1">#             Filename of a .csv file containing information on households</span>
+<span class="c1">#             by postcode.</span>
+<span class="c1">#         &quot;&quot;&quot;</span>
+<span class="c1">#         if postcode_file == &#39;&#39;:</span>
+<span class="c1">#             full_postcode_file = os.sep.join((os.path.dirname(__file__),</span>
+<span class="c1">#                                          &#39;resources&#39;,</span>
+<span class="c1">#                                          &#39;postcodes_unlabelled.csv&#39;))</span>
+
+<span class="c1">#         if sample_labels == &#39;&#39;:</span>
+<span class="c1">#             sample_labels = os.sep.join((os.path.dirname(__file__),</span>
+<span class="c1">#                                           &#39;resources&#39;,</span>
+<span class="c1">#                                           &#39;postcodes_unlabelled.csv&#39;))</span>
+
+<span class="c1">#         self.postcodes_sampled = pd.read_csv(sample_labels)</span>
+<span class="c1">#         self.postcodes_unlablled = pd.read_csv(postcode_file)</span>
+        
+<span class="c1">#     def local_encoder(self):</span>
+        
+<span class="c1">#         data = self.postcodes_sampled</span>
+<span class="c1">#         encoder = LabelEncoder().fit(data.localAuthority)</span>
+
+<span class="c1">#         return encoder</span>
+    
+<span class="c1">#     @staticmethod</span>
+<span class="c1">#     def get_local_authority_methods():</span>
+<span class="c1">#         &quot;&quot;&quot;</span>
+<span class="c1">#         Get a dictionary of available local authorithy classification methods.</span>
+
+<span class="c1">#         Returns</span>
+<span class="c1">#         -------</span>
+
+<span class="c1">#         dict</span>
+<span class="c1">#             Dictionary mapping regression method names (which have</span>
+<span class="c1">#              no inate meaning) on to an identifier to be passed to the</span>
+<span class="c1">#              get_altitude_estimate method.</span>
+<span class="c1">#         &quot;&quot;&quot;</span>
+    
+<span class="c1">#         # knn_model</span>
+<span class="c1">#         knn_model = KNeighborsClassifier(n_neighbors = 5)</span>
+        
+<span class="c1">#         # decisiontree</span>
+<span class="c1">#         decisiontree_model = DecisionTreeClassifier()</span>
+        
+<span class="c1">#         # randomforest</span>
+<span class="c1">#         rf_model = RandomForestClassifier()</span>
+        
+            
+<span class="c1">#         return {&#39;Do Nothing&#39;: 0,</span>
+<span class="c1">#                 &#39;knn_model&#39;: knn_model,</span>
+<span class="c1">#                 &#39;decisiontree_model&#39;: decisiontree_model,</span>
+<span class="c1">#                 &#39;randomforest_model&#39;: rf_model}</span>
+
+<span class="c1">#     def get_local_authority_estimate(self, eastings, northings, method=0):</span>
+<span class="c1">#         &quot;&quot;&quot;</span>
+<span class="c1">#         Generate series predicting local authorities in m for a sequence</span>
+<span class="c1">#         of OSGB36 locations.</span>
+
+<span class="c1">#         Parameters</span>
+<span class="c1">#         ----------</span>
+
+<span class="c1">#         eastings : sequence of floats</span>
+<span class="c1">#             Sequence of OSGB36 eastings.</span>
+<span class="c1">#         northings : sequence of floats</span>
+<span class="c1">#             Sequence of OSGB36 northings.</span>
+<span class="c1">#         method : int (optional)</span>
+<span class="c1">#             optionally specify (via a value in</span>
+<span class="c1">#             self.get_altitude_methods) the regression</span>
+<span class="c1">#             method to be used.</span>
+
+<span class="c1">#         Returns</span>
+<span class="c1">#         -------</span>
+
+<span class="c1">#         pandas.Series</span>
+<span class="c1">#             Series of altitudes indexed by postcodes.</span>
+<span class="c1">#         &quot;&quot;&quot;</span>
+        
+<span class="c1">#         data = self.postcodes_sampled</span>
+<span class="c1">#         encoder = self.local_encoder()</span>
+<span class="c1">#         y = encoder.fit_transform(data[&#39;localAuthority&#39;])</span>
+<span class="c1">#         X = data[[&#39;easting&#39;, &#39;northing&#39;]]</span>
+        
+<span class="c1">#         if method == 0:</span>
+<span class="c1">#             return pd.Series(data=np.full(len(eastings), &#39;Unknown&#39;),</span>
+<span class="c1">#                          index=[(est, nth) for est, nth in</span>
+<span class="c1">#                                 zip(eastings, northings)],</span>
+<span class="c1">#                          name=&#39;localAuthority&#39;)</span>
+<span class="c1">#         else:</span>
+<span class="c1">#             position = pd.concat([eastings,northings], axis = 1)</span>
+    
+<span class="c1">#             model = list(self.get_local_authority_methods().values())[method]            </span>
+<span class="c1">#             model.fit(X, y)</span>
+            
+<span class="c1">#             local_pre = model.predict(position)</span>
+    
+<span class="c1">#             localAuthority = pd.Series(encoder.inverse_transform(local_pre))</span>
+
+<span class="c1">#         return localAuthority</span>
+
+
+    <span class="c1"># def run_local_auth(self, test_data, train_data):</span>
+    <span class="c1">#     tool_local = Tool_local(test_data, train_data)</span>
+        
+    <span class="c1">#     eastings = tool_local.postcodes_unlablled.easting</span>
+    <span class="c1">#     northings = tool_local.postcodes_unlablled.northing</span>
+
+    <span class="c1">#     marker_data = []</span>
+    <span class="c1">#     for east, north in zip(eastings, northings):</span>
+    <span class="c1">#         pred = tool_local.get_local_authority_estimate( east, north , method=1)</span>
+    <span class="c1">#         lat, long = self.get_gps_lat_long_from_easting_northing(east, north, rads=False, dms=False)</span>
+    <span class="c1">#         marker_data.append({&#39;lat&#39;: lat, &#39;long&#39;: long, &#39;pred&#39;: pred})</span>
+    <span class="c1">#         self.create_markers(marker_data)</span>
+
+ 
+
+<div class="viewcode-block" id="Tool"><a class="viewcode-back" href="../../flood_tool.html#flood_tool.tool.Tool">[docs]</a><span class="k">class</span> <span class="nc">Tool</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class to interact with a postcode database file.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">postcode_file</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">sample_labels</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+                 <span class="n">household_file</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+
+<span class="sd">        full_postcode_file : str, optional</span>
+<span class="sd">            Filename of a .csv file containing geographic location</span>
+<span class="sd">            data for postcodes.</span>
+
+<span class="sd">        household_file : str, optional</span>
+<span class="sd">            Filename of a .csv file containing information on households</span>
+<span class="sd">            by postcode.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">postcode_file</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="n">full_postcode_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span>
+                                         <span class="s1">&#39;resources&#39;</span><span class="p">,</span>
+                                         <span class="s1">&#39;postcodes_unlabelled.csv&#39;</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">household_file</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="n">household_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span>
+                                          <span class="s1">&#39;resources&#39;</span><span class="p">,</span>
+                                          <span class="s1">&#39;households_per_sector.csv&#39;</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">postcodedb</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">full_postcode_file</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Tool.train"><a class="viewcode-back" href="../../flood_tool.html#flood_tool.tool.Tool.train">[docs]</a>    <span class="k">def</span> <span class="nf">train</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">labelled_samples</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Train the model using a labelled set of samples.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        </span>
+<span class="sd">        labelled_samples : str, optional</span>
+<span class="sd">            Filename of a .csv file containing a labelled set of samples.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">labelled_samples</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="n">labelled_samples</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span>
+                                         <span class="s1">&#39;resources&#39;</span><span class="p">,</span>
+                                         <span class="s1">&#39;postcodes_sample.csv&#39;</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Tool.get_easting_northing"><a class="viewcode-back" href="../../flood_tool.html#flood_tool.tool.Tool.get_easting_northing">[docs]</a>    <span class="k">def</span> <span class="nf">get_easting_northing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">postcodes</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get a frame of OS eastings and northings from a collection</span>
+<span class="sd">        of input postcodes.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+
+<span class="sd">        postcodes: sequence of strs</span>
+<span class="sd">            Sequence of postcodes.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+
+<span class="sd">        pandas.DataFrame</span>
+<span class="sd">            DataFrame containing only OSGB36 easthing and northing indexed</span>
+<span class="sd">            by the input postcodes. Invalid postcodes (i.e. not in the</span>
+<span class="sd">            input unlabelled postcodes file) return as NaN.</span>
+<span class="sd">         &quot;&quot;&quot;</span>
+
+        <span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">postcodedb</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">frame</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">&#39;postcode&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">frame</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">postcodes</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;easting&#39;</span><span class="p">,</span> <span class="s1">&#39;northing&#39;</span><span class="p">]]</span></div>
+
+<div class="viewcode-block" id="Tool.get_lat_long"><a class="viewcode-back" href="../../flood_tool.html#flood_tool.tool.Tool.get_lat_long">[docs]</a>    <span class="k">def</span> <span class="nf">get_lat_long</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">postcodes</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get a frame containing GPS latitude and longitude information for a</span>
+<span class="sd">        collection of of postcodes.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+
+<span class="sd">        postcodes: sequence of strs</span>
+<span class="sd">            Sequence of postcodes.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+
+<span class="sd">        pandas.DataFrame</span>
+<span class="sd">            DataFrame containing only WGS84 latitude and longitude pairs for</span>
+<span class="sd">            the input postcodes. Invalid postcodes (i.e. not in the</span>
+<span class="sd">            input unlabelled postcodes file) return as NAN.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Tool.get_flood_class_from_postcodes_methods"><a class="viewcode-back" href="../../flood_tool.html#flood_tool.tool.Tool.get_flood_class_from_postcodes_methods">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_flood_class_from_postcodes_methods</span><span class="p">():</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get a dictionary of available flood probablity classification methods</span>
+<span class="sd">        for postcodes.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+
+<span class="sd">        dict</span>
+<span class="sd">            Dictionary mapping classification method names (which have</span>
+<span class="sd">             no inate meaning) on to an identifier to be passed to the</span>
+<span class="sd">             get_flood_class_from_postcode method.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;all_zero_risk&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span></div>
+
+<div class="viewcode-block" id="Tool.get_flood_class_from_postcodes"><a class="viewcode-back" href="../../flood_tool.html#flood_tool.tool.Tool.get_flood_class_from_postcodes">[docs]</a>    <span class="k">def</span> <span class="nf">get_flood_class_from_postcodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">postcodes</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate series predicting flood probability classification</span>
+<span class="sd">        for a collection of postcodes.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+
+<span class="sd">        postcodes : sequence of strs</span>
+<span class="sd">            Sequence of postcodes.</span>
+<span class="sd">        method : int (optional)</span>
+<span class="sd">            optionally specify (via a value in</span>
+<span class="sd">            get_flood_class_from_postcodes_methods) the classification</span>
+<span class="sd">            method to be used.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+
+<span class="sd">        pandas.Series</span>
+<span class="sd">            Series of flood risk classification labels indexed by postcodes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">postcodes</span><span class="p">),</span> <span class="nb">int</span><span class="p">),</span>
+                             <span class="n">index</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">postcodes</span><span class="p">),</span>
+                             <span class="n">name</span><span class="o">=</span><span class="s1">&#39;riskLabel&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+<div class="viewcode-block" id="Tool.get_flood_class_from_locations_methods"><a class="viewcode-back" href="../../flood_tool.html#flood_tool.tool.Tool.get_flood_class_from_locations_methods">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_flood_class_from_locations_methods</span><span class="p">():</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get a dictionary of available flood probablity classification methods</span>
+<span class="sd">        for locations.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+
+<span class="sd">        dict</span>
+<span class="sd">            Dictionary mapping classification method names (which have</span>
+<span class="sd">             no inate meaning) on to an identifier to be passed to the</span>
+<span class="sd">             get_flood_class_from_OSGB36_locations and</span>
+<span class="sd">             get_flood_class_from_OSGB36_locations method.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;all_zero_risk&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span></div>
+
+<div class="viewcode-block" id="Tool.get_flood_class_from_OSGB36_locations"><a class="viewcode-back" href="../../flood_tool.html#flood_tool.tool.Tool.get_flood_class_from_OSGB36_locations">[docs]</a>    <span class="k">def</span> <span class="nf">get_flood_class_from_OSGB36_locations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eastings</span><span class="p">,</span> <span class="n">northings</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate series predicting flood probability classification</span>
+<span class="sd">        for a collection of OSGB36_locations.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+
+<span class="sd">        eastings : sequence of floats</span>
+<span class="sd">            Sequence of OSGB36 eastings.</span>
+<span class="sd">        northings : sequence of floats</span>
+<span class="sd">            Sequence of OSGB36 northings.</span>
+<span class="sd">        method : int (optional)</span>
+<span class="sd">            optionally specify (via a value in</span>
+<span class="sd">            self.get_flood_class_from_locations_methods) the classification</span>
+<span class="sd">            method to be used.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+
+<span class="sd">        pandas.Series</span>
+<span class="sd">            Series of flood risk classification labels indexed by locations.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">eastings</span><span class="p">),</span> <span class="nb">int</span><span class="p">),</span>
+                             <span class="n">index</span><span class="o">=</span><span class="p">[(</span><span class="n">est</span><span class="p">,</span> <span class="n">nth</span><span class="p">)</span> <span class="k">for</span> <span class="n">est</span><span class="p">,</span> <span class="n">nth</span> <span class="ow">in</span>
+                                    <span class="nb">zip</span><span class="p">(</span><span class="n">eastings</span><span class="p">,</span> <span class="n">northings</span><span class="p">)],</span>
+                             <span class="n">name</span><span class="o">=</span><span class="s1">&#39;riskLabel&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+<div class="viewcode-block" id="Tool.get_flood_class_from_WGS84_locations"><a class="viewcode-back" href="../../flood_tool.html#flood_tool.tool.Tool.get_flood_class_from_WGS84_locations">[docs]</a>    <span class="k">def</span> <span class="nf">get_flood_class_from_WGS84_locations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">longitudes</span><span class="p">,</span> <span class="n">latitudes</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate series predicting flood probability classification</span>
+<span class="sd">        for a collection of WGS84 datum locations.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+
+<span class="sd">        longitudes : sequence of floats</span>
+<span class="sd">            Sequence of WGS84 longitudes.</span>
+<span class="sd">        latitudes : sequence of floats</span>
+<span class="sd">            Sequence of WGS84 latitudes.</span>
+<span class="sd">        method : int (optional)</span>
+<span class="sd">            optionally specify (via a value in</span>
+<span class="sd">            self.get_flood_class_from_locations_methods) the classification</span>
+<span class="sd">            method to be used.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+
+<span class="sd">        pandas.Series</span>
+<span class="sd">            Series of flood risk classification labels indexed by locations.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">longitudes</span><span class="p">),</span> <span class="nb">int</span><span class="p">),</span>
+                             <span class="n">index</span><span class="o">=</span><span class="p">[(</span><span class="n">lng</span><span class="p">,</span> <span class="n">lat</span><span class="p">)</span> <span class="k">for</span> <span class="n">lng</span><span class="p">,</span> <span class="n">lat</span> <span class="ow">in</span>
+                                    <span class="nb">zip</span><span class="p">(</span><span class="n">longitudes</span><span class="p">,</span> <span class="n">latitudes</span><span class="p">)],</span>
+                             <span class="n">name</span><span class="o">=</span><span class="s1">&#39;riskLabel&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+<div class="viewcode-block" id="Tool.get_house_price_methods"><a class="viewcode-back" href="../../flood_tool.html#flood_tool.tool.Tool.get_house_price_methods">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_house_price_methods</span><span class="p">():</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get a dictionary of available flood house price regression methods.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+
+<span class="sd">        dict</span>
+<span class="sd">            Dictionary mapping regression method names (which have</span>
+<span class="sd">             no inate meaning) on to an identifier to be passed to the</span>
+<span class="sd">             get_median_house_price_estimate method.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;all_england_median&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span></div>
+
+<div class="viewcode-block" id="Tool.get_median_house_price_estimate"><a class="viewcode-back" href="../../flood_tool.html#flood_tool.tool.Tool.get_median_house_price_estimate">[docs]</a>    <span class="k">def</span> <span class="nf">get_median_house_price_estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">postcodes</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate series predicting median house price for a collection</span>
+<span class="sd">        of poscodes.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+
+<span class="sd">        postcodes : sequence of strs</span>
+<span class="sd">            Sequence of postcodes.</span>
+<span class="sd">        method : int (optional)</span>
+<span class="sd">            optionally specify (via a value in</span>
+<span class="sd">            self.get_house_price_methods) the regression</span>
+<span class="sd">            method to be used.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+
+<span class="sd">        pandas.Series</span>
+<span class="sd">            Series of median house price estimates indexed by postcodes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">postcodes</span><span class="p">),</span> <span class="mf">245000.0</span><span class="p">),</span>
+                             <span class="n">index</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">postcodes</span><span class="p">),</span>
+                             <span class="n">name</span><span class="o">=</span><span class="s1">&#39;medianPrice&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+<div class="viewcode-block" id="Tool.get_local_authority_methods"><a class="viewcode-back" href="../../flood_tool.html#flood_tool.tool.Tool.get_local_authority_methods">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_local_authority_methods</span><span class="p">():</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get a dictionary of available local authorithy classification methods.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+
+<span class="sd">        dict</span>
+<span class="sd">            Dictionary mapping regression method names (which have</span>
+<span class="sd">             no inate meaning) on to an identifier to be passed to the</span>
+<span class="sd">             get_altitude_estimate method.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;Do Nothing&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span></div>
+
+<div class="viewcode-block" id="Tool.get_local_authority_estimate"><a class="viewcode-back" href="../../flood_tool.html#flood_tool.tool.Tool.get_local_authority_estimate">[docs]</a>    <span class="k">def</span> <span class="nf">get_local_authority_estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eastings</span><span class="p">,</span> <span class="n">northings</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate series predicting local authorities in m for a sequence</span>
+<span class="sd">        of OSGB36 locations.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+
+<span class="sd">        eastingss : sequence of floats</span>
+<span class="sd">            Sequence of OSGB36 eastings.</span>
+<span class="sd">        northings : sequence of floats</span>
+<span class="sd">            Sequence of OSGB36 northings.</span>
+<span class="sd">        method : int (optional)</span>
+<span class="sd">            optionally specify (via a value in</span>
+<span class="sd">            self.get_altitude_methods) the regression</span>
+<span class="sd">            method to be used.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+
+<span class="sd">        pandas.Series</span>
+<span class="sd">            Series of altitudes indexed by postcodes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">eastings</span><span class="p">),</span> <span class="s1">&#39;Unknown&#39;</span><span class="p">),</span>
+                             <span class="n">index</span><span class="o">=</span><span class="p">[(</span><span class="n">est</span><span class="p">,</span> <span class="n">nth</span><span class="p">)</span> <span class="k">for</span> <span class="n">est</span><span class="p">,</span> <span class="n">nth</span> <span class="ow">in</span>
+                                    <span class="nb">zip</span><span class="p">(</span><span class="n">eastings</span><span class="p">,</span> <span class="n">northings</span><span class="p">)],</span>
+                             <span class="n">name</span><span class="o">=</span><span class="s1">&#39;localAuthority&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+<div class="viewcode-block" id="Tool.get_total_value"><a class="viewcode-back" href="../../flood_tool.html#flood_tool.tool.Tool.get_total_value">[docs]</a>    <span class="k">def</span> <span class="nf">get_total_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">postal_data</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a series of estimates of the total property values</span>
+<span class="sd">        of a sequence of postcode units or postcode sectors.</span>
+
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+
+<span class="sd">        postal_data : sequence of strs</span>
+<span class="sd">            Sequence of postcode units or postcodesectors</span>
+
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+
+<span class="sd">        pandas.Series</span>
+<span class="sd">            Series of total property value estimates indexed by locations.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+<div class="viewcode-block" id="Tool.get_annual_flood_risk"><a class="viewcode-back" href="../../flood_tool.html#flood_tool.tool.Tool.get_annual_flood_risk">[docs]</a>    <span class="k">def</span> <span class="nf">get_annual_flood_risk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">postcodes</span><span class="p">,</span>  <span class="n">risk_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a series of estimates of the total property values of a</span>
+<span class="sd">        collection of postcodes.</span>
+
+<span class="sd">        Risk is defined here as a damage coefficient multiplied by the</span>
+<span class="sd">        value under threat multiplied by the probability of an event.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+
+<span class="sd">        postcodes : sequence of strs</span>
+<span class="sd">            Sequence of postcodes.</span>
+<span class="sd">        risk_labels: pandas.Series (optional)</span>
+<span class="sd">            Series containing flood risk classifiers, as</span>
+<span class="sd">            predicted by get_flood_class_from_postcodes.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+
+<span class="sd">        pandas.Series</span>
+<span class="sd">            Series of total annual flood risk estimates indexed by locations.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">risk_labels</span> <span class="o">=</span> <span class="n">risk_labels</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_flood_class</span><span class="p">(</span><span class="n">postcodes</span><span class="p">)</span>
+
+        <span class="n">cost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_total_value</span><span class="p">(</span><span class="n">risk_labels</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Team Ouse.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
