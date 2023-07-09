@@ -1,5 +1,7 @@
 # Flood Risk Prediction Tool
 
+## This was developed as part of a group project. 
+
 ## Overview
 
 Flood risk is a significant concern, affecting both global and UK-based human settlements. Predicted climate changes suggest an increase in the frequency and severity of floods. Floods can occur from various sources such as surface water, rivers, and seas. To better assess and manage these risks, we have developed an efficient tool leveraging Machine Learning (ML) techniques.
